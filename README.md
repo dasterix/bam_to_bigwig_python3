@@ -46,7 +46,7 @@ bam_to_bigwig.py BAM_FILE [BAM_FILE ...]
   2. Make sure wigToBigWig is in a directory in your `$PATH`
     * `cp wigToBigWig /usr/local/bin`
 * rsem-bam2wig
-  1. Download the source code: http://deweylab.biostat.wisc.edu/rsem/
+  1. Download the source code: https://github.com/deweylab/RSEM
   2. Compile
     * `make`
   3. Make sure rsem-bam2wig is in a directory in your $PATH
