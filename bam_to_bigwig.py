@@ -20,10 +20,6 @@ Usage:
 --ignore-supplementary: If this is set, rsem-bam2wig will ignore alignments with the "supplementary alignment" flag bit 0x800 set.
 '''
 '''
-Han Lin, 2014
-hotdogee[at]gmail[dot]com
-Biomedical Electronics and Bioinformatics, National Taiwan University
-National Agricultural Library, ARS, USDA
 
 Dependencies:
     pysam (https://github.com/pysam-developers/pysam)
