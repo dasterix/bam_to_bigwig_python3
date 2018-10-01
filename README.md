@@ -51,10 +51,3 @@ bam_to_bigwig.py BAM_FILE [BAM_FILE ...]
     * `make`
   3. Make sure rsem-bam2wig is in a directory in your $PATH
     * `cp rsem-bam2wig /usr/local/bin`
-
-# Authors
-```
-Han Lin, 2014.
-Biomedical Electronics and Bioinformatics, National Taiwan University
-National Agricultural Library, ARS, USDA
-```
