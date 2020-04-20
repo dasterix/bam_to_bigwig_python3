@@ -5,19 +5,11 @@ Usage:
     bam_to_bigwig.py BAM_FILE [BAM_FILE ...]
     [-o, --bigwig_filename=<output file name>
      -t, --tempfile
-     -k, --keep-tempfile
-     -s, --ignore-secondary
-     -q, --ignore-qc-fail
-     -d, --ignore-optical-pcr-duplicate
-     -u, --ignore-supplementary]
+     -k, --keep-tempfile]
 
 --bigwig_filename: if not given will save to <BAM file prefix>.bigwig.
 --tempfile: If this is set, will use tempfile library to generate file names instead of using <BAM file prefix>.wig and <BAM file prefix>.sizes.
 --keep-tempfile: If this is set, will not delete the intermediate files <BAM file prefix>.wig and <BAM file prefix>.sizes.
---ignore-secondary: If this is set, rsem-bam2wig will ignore alignments with the "secondary alignment" flag bit 0x100 set.
---ignore-qc-fail: If this is set, rsem-bam2wig will ignore alignments with the "not passing quality controls" flag bit 0x200 set.
---ignore-optical-pcr-duplicate: If this is set, rsem-bam2wig will ignore alignments with the "PCR or optical duplicate" flag bit 0x400 set.
---ignore-supplementary: If this is set, rsem-bam2wig will ignore alignments with the "supplementary alignment" flag bit 0x800 set.
 '''
 '''
 
@@ -129,7 +121,7 @@ def query_yes_no(question, default="yes"):
 
     while True:
         sys.stdout.write(question + prompt)
-        choice = raw_input().lower()
+        choice = input().lower()
         if default is not None and choice == '':
             return valid[default]
         elif choice in valid:
@@ -138,7 +130,7 @@ def query_yes_no(question, default="yes"):
             sys.stdout.write("Please respond with 'yes' or 'no' "\
                              "(or 'y' or 'n').\n")
 
-def bam_to_wig(bam_filename, wig_filename, ignore_secondary=False, ignore_qc_fail=False, ignore_optical_pcr_duplicate=False, ignore_supplementary=False):
+def bam_to_wig(bam_filename, wig_filename):
     file_prefix = os.path.splitext(bam_filename)[0]
     if not wig_filename:
         wig_filename = '%s.wig' % file_prefix
@@ -150,15 +142,12 @@ def bam_to_wig(bam_filename, wig_filename, ignore_secondary=False, ignore_qc_fai
     elif not os.access(os.path.dirname(os.path.abspath(wig_filename)), os.W_OK):
         log.critical('Write permission denied: %s' % (os.path.dirname(os.path.abspath(wig_filename))))
         return False
-    cl = ['rsem-bam2wig', bam_filename, wig_filename, file_prefix, '--no-fractional-weight']
-    if ignore_secondary:
-        cl.append('--ignore-secondary')
-    if ignore_qc_fail:
-        cl.append('--ignore-qc-fail')
-    if ignore_optical_pcr_duplicate:
-        cl.append('--ignore-optical-pcr-duplicate')
-    if ignore_supplementary:
-        cl.append('--ignore-supplementary')
+    #remove secondary alignments
+    cl = ['samtools', 'view', '-F', '3840', bam_filename, '-o', 'filtered.bam']
+    p = Popen(cl)
+    p.communicate()
+    #run rsem with filtered bam file
+    cl = ['rsem-bam2wig', 'filtered.bam', wig_filename, file_prefix, '--no-fractional-weight']
     p = Popen(cl)
     p.communicate()
     rc = p.returncode
@@ -199,7 +188,8 @@ def bam_to_sizes(bam_filename, chr_sizes_filename):
     else:
         with fp:
             for chrom, size in chr_sizes:
-                fp.write("%s\t%s\n" % (chrom, size))
+                tmp = "%s\t%s\n" % (chrom, size)
+                fp.write(tmp.encode())
     return True
 
 def wig_to_bigwig(wig_filename, bigwig_filename, chr_sizes_filename):
@@ -228,7 +218,7 @@ def wig_to_bigwig(wig_filename, bigwig_filename, chr_sizes_filename):
             log.critical('"%s" terminated with non-zero return code: %d' % (' '.join(cl), rc))
     return rc == 0, rc
 
-def main(bam_filename, bigwig_filename=None, use_tempfile=False, keep_tempfile=False, ignore_secondary=False, ignore_qc_fail=False, ignore_optical_pcr_duplicate=False, ignore_supplementary=False):
+def main(bam_filename, bigwig_filename=None, use_tempfile=False, keep_tempfile=False):
         #config = {'program': {'ucsc_bigwig' : 'wigToBigWig', 'rsem-bam2wig' : 'rsem-bam2wig'}}
     file_prefix = os.path.splitext(bam_filename)[0]
     if bigwig_filename is None:
@@ -246,7 +236,7 @@ def main(bam_filename, bigwig_filename=None, use_tempfile=False, keep_tempfile=F
         #Use a temp file to avoid any possiblity of not having write permission
         wig_filename = tempfile.NamedTemporaryFile(delete=False).name
     sys.stdout.write('Building wig file: %s ...\n' % wig_filename)
-    if not bam_to_wig(bam_filename, wig_filename, ignore_secondary, ignore_qc_fail, ignore_optical_pcr_duplicate, ignore_supplementary):
+    if not bam_to_wig(bam_filename, wig_filename):
         sys.exit(1)
     sys.stdout.write('Done\n')
     
@@ -272,6 +262,7 @@ def main(bam_filename, bigwig_filename=None, use_tempfile=False, keep_tempfile=F
     if not keep_tempfile:
         os.remove(chr_sizes_filename)
         os.remove(wig_filename)
+        os.remove('filtered.bam')
         
 def dependences_exist():
     """The script requires:
@@ -311,13 +302,9 @@ if __name__ == '__main__':
     parser.add_option('-o', '--bigwig_filename', dest='bigwig_filename')
     parser.add_option('-t', '--tempfile', dest='use_tempfile', action='store_true', default=False)
     parser.add_option('-k', '--keeptemp', dest='keep_tempfile', action='store_true', default=False)
-    parser.add_option('-s', '--ignore-secondary', dest='ignore_secondary', action='store_true', default=False)
-    parser.add_option('-q', '--ignore-qc-fail', dest='ignore_qc_fail', action='store_true', default=False)
-    parser.add_option('-d', '--ignore-optical-pcr-duplicate', dest='ignore_optical_pcr_duplicate', action='store_true', default=False)
-    parser.add_option('-u', '--ignore-supplementary', dest='ignore_supplementary', action='store_true', default=False)
     (options, args) = parser.parse_args()
     if len(args) == 0:
-        print __doc__
+        print (__doc__)
         dependences_exist()
         sys.exit()
     if not dependences_exist():
@@ -325,11 +312,7 @@ if __name__ == '__main__':
     kwargs = dict(
         bigwig_filename=options.bigwig_filename,
         use_tempfile=options.use_tempfile,
-        keep_tempfile=options.keep_tempfile,
-        ignore_secondary=options.ignore_secondary,
-        ignore_qc_fail=options.ignore_qc_fail,
-        ignore_optical_pcr_duplicate=options.ignore_optical_pcr_duplicate,
-        ignore_supplementary=options.ignore_supplementary)
+        keep_tempfile=options.keep_tempfile)
     try:
         for bam_filename in args:
             main(bam_filename, **kwargs)
