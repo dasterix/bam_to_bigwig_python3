@@ -143,11 +143,12 @@ def bam_to_wig(bam_filename, wig_filename):
         log.critical('Write permission denied: %s' % (os.path.dirname(os.path.abspath(wig_filename))))
         return False
     #remove secondary alignments
-    cl = ['samtools', 'view', '-F', '3840', bam_filename, '-o', 'filtered.bam']
+    filtered_bam_name = 'filtered_' + file_prefix + '.bam'
+    cl = ['samtools', 'view', '-F', '3840', bam_filename, '-o', filtered_bam_name]
     p = Popen(cl)
     p.communicate()
     #run rsem with filtered bam file
-    cl = ['rsem-bam2wig', 'filtered.bam', wig_filename, file_prefix, '--no-fractional-weight']
+    cl = ['rsem-bam2wig', filtered_bam_name, wig_filename, file_prefix, '--no-fractional-weight']
     p = Popen(cl)
     p.communicate()
     rc = p.returncode
@@ -262,7 +263,7 @@ def main(bam_filename, bigwig_filename=None, use_tempfile=False, keep_tempfile=F
     if not keep_tempfile:
         os.remove(chr_sizes_filename)
         os.remove(wig_filename)
-        os.remove('filtered.bam')
+        os.remove(filtered_bam_name)
         
 def dependences_exist():
     """The script requires:
