@@ -144,7 +144,6 @@ def bam_to_wig(bam_filename, wig_filename):
         return False
     #remove secondary alignments
     filtered_bam_name = 'filtered_' + file_prefix + '.bam'
-    print(filtered_bam_name)
     cl = ['samtools', 'view', '-F', '3840', bam_filename, '-o', filtered_bam_name]
     p = Popen(cl)
     p.communicate()
