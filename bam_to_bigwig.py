@@ -143,7 +143,7 @@ def bam_to_wig(bam_filename, wig_filename):
         log.critical('Write permission denied: %s' % (os.path.dirname(os.path.abspath(wig_filename))))
         return False
     #remove secondary alignments
-    filtered_bam_name = 'filtered_' + file_prefix + '.bam'
+    filtered_bam_name = file_prefix + '-filtered.bam'
     cl = ['samtools', 'view', '-F', '3840', bam_filename, '-o', filtered_bam_name]
     p = Popen(cl)
     p.communicate()
@@ -253,7 +253,6 @@ def main(bam_filename, bigwig_filename=None, use_tempfile=False, keep_tempfile=F
     sys.stdout.write(' Done\n')
     
     # run wigToBigWig
-    filtered_bam_name = 'filtered_' + file_prefix + '.bam'
     sys.stdout.write('Building bigwig file: %s ...' % bigwig_filename)
     if not wig_to_bigwig(wig_filename, bigwig_filename, chr_sizes_filename):
         sys.stdout.write(' Failed\n')
@@ -261,6 +260,7 @@ def main(bam_filename, bigwig_filename=None, use_tempfile=False, keep_tempfile=F
     sys.stdout.write(' Done\n')
     
     # remove temp files
+    filtered_bam_name = file_prefix + '-filtered.bam'
     if not keep_tempfile:
         os.remove(chr_sizes_filename)
         os.remove(wig_filename)
