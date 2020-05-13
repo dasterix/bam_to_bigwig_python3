@@ -144,7 +144,7 @@ def bam_to_wig(bam_filename, wig_filename):
         return False
     #remove secondary alignments
     filtered_bam_name = file_prefix + '-filtered.bam'
-    cl = ['samtools', 'view', '-F', '3840', bam_filename, '-o', filtered_bam_name]
+    cl = ['samtools', 'view', '-F', '3840', '-@', '12', bam_filename, '-o', filtered_bam_name]
     p = Popen(cl)
     p.communicate()
     #run rsem with filtered bam file
