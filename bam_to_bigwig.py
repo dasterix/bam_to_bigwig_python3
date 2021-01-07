@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 '''Convert your alignment files in BAM format into coverage files in bigWig format
 
 Usage:
