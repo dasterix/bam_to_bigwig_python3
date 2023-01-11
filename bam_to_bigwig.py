@@ -14,8 +14,7 @@ Usage:
 '''
 
 Dependencies:
-    
-     (https://github.com/pysam-developers/pysam)
+    pysam (https://github.com/pysam-developers/pysam)
     wigToBigWig from UCSC (http://hgdownload.cse.ucsc.edu/admin/exe/)
     rsem-bam2wig from RSEM (http://deweylab.biostat.wisc.edu/rsem/)
 
