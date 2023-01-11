@@ -14,7 +14,8 @@ Usage:
 '''
 
 Dependencies:
-    pysam (https://github.com/pysam-developers/pysam)
+    
+     (https://github.com/pysam-developers/pysam)
     wigToBigWig from UCSC (http://hgdownload.cse.ucsc.edu/admin/exe/)
     rsem-bam2wig from RSEM (http://deweylab.biostat.wisc.edu/rsem/)
 
@@ -165,8 +166,9 @@ def bam_to_wig(bam_filename, wig_filename):
 @contextmanager
 def indexed_bam(bam_filename):
     import pysam
-    if not os.path.exists(bam_filename + ".bai"):
-        pysam.index(bam_filename)
+    if not os.path.exists(bam_filename + ".csi"): #changed to .csi index instead of .bai
+        #pysam.index(bam_filename) 
+        print("CSI INDEX MISSING") #.csi index should have been created in RNAseq_annotate.py, if you reach this statement something went wrong.
     sam_reader = pysam.Samfile(bam_filename, "rb")
     yield sam_reader
     sam_reader.close()
